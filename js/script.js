@@ -85,11 +85,7 @@ function loadData(){
     return false;
 };
 
-function loadWikipediaArticles(){
-    return false;
-};
-
-var nytimes_success = function(data, status, jqXHR){
+var nytimes_success = function(data){
         var nytimes_articles_ul = $('#nytimes-articles');
         var numItems = data.num_results;
         var results = data.results;
@@ -104,19 +100,40 @@ var nytimes_success = function(data, status, jqXHR){
         for(var i=0; i < numItems; i++)
         {
             var listItem = document.createElement('listitem');
-            var textString = "Review of " + results[i].book_title + " by " + results[i].byline + "\n";
+            var textString = "Review of " + results[i].book_title 
+                                            + " by " 
+                                            + results[i].byline 
+                                            + "\n";
             listItem.innerText = textString;
             book_list.appendChild(listItem);
         }
 };
 
 var nytimes_error = function(){
-
+        var nytimes_articles_ul = $('#nytimes-articles');
+        var numItems = data.num_results;
+        var results = data.results;
+        var book_list = document.getElementById('nytimes-articles');
+        // append empty line to ul - begin.
+        var listItem = document.createElement('listitem');
+        var textString = "\n";
+        listItem.innerText = textString;
+        book_list.appendChild(listItem);
+        var listItem = document.createElement('listitem');
+        var textString = "Error retrieving reviews from the New York Times" ;
+        listItem.innerText = textString;
+        book_list.appendChild(listItem);
 };
+
 
 function loadNYTimesArticles(){
     //var nytimes_sacks = "http://api.nytimes.com/svc/books/v3/reviews.jsonp?author=Oliver Sacks&api-key=c262b76484d68f7da3ef47ee5432d47f:7:71609997&callback=books";
     var nytimes_sacks = "http://api.nytimes.com/svc/books/v3/reviews.jsonp?author=Oliver Sacks"; 
+    
+    $.ajaxSetup({
+      "error":function() { console.log("NY Times articles could not be loaded");  }
+    });
+
     $.ajax({
             url: nytimes_sacks,
             dataType: "jsonp",
@@ -124,14 +141,49 @@ function loadNYTimesArticles(){
             data: { "api-key": "c262b76484d68f7da3ef47ee5432d47f:7:71609997"},
             jsonpCallback: "books",
             success: nytimes_success
+        }).fail(function error(){
+            console.log("NY Times articles could not be loaded");
+        }).done(function doneNyTimes(){
+            console.log("Done laoding articles");
+        }); 
+
+    return false;
+};
+
+
+function loadWikipediaArticles(){
+    var wikipedia_sacks = "http://en.wikipedia.org/w/api.php"; 
+    var urlData = new FormData();
+    urlData.append("action","query");
+    urlData.append("rvprop","content");
+    urlData.append("titles","Oliver Sacks");
+    urlData.append("format","json");
+    urlData.append("limit","10");
+    var urlStr = "http://en.wikipedia.org/w/api.php?"
+                    + "action=query&"
+                    + "titles=" + encodeURIComponent("Oliver Sacks") +"&"
+                    + "format=json&"
+                    + "callback=wikipediaAricles&"
+                    + "continue=";
+
+    $.ajax({
+            url: urlStr,
+            dataType: "jsonp",
+            data:{
+                format: 'json'
+            },
+            success: wikipedia_success
           }); 
     return false;
 };
 
 
-//$('#submit-btn').click(loadData);
+var wikipedia_success = function(data, status, jqXHR){
+    console.log(data);
+};
+
+
+
 $('#form-container').submit(loadData);
 $('#my-form').submit(loadData);
-//$('#wikipedia-submit-btn').click(loadWikipediaArticles);
-
-//loadData();
+$('#wikipedia-submit-btn').click(loadWikipediaArticles);
